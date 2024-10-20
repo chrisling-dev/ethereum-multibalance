@@ -1,0 +1,20 @@
+{
+  "name": "hardhat-project",
+  "scripts": {
+    "test": "npx hardhat test",
+    "benchmark:arbitrum": "npx ts-node scripts/benchmarks/arbitrum.ts",
+    "benchmark:base": "npx ts-node scripts/benchmarks/base.ts",
+    "benchmark:ethereum": "npx ts-node scripts/benchmarks/ethereum.ts",
+    "test:fulltrace": "npx hardhat test --vvvv # same as --fulltrace"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-toolbox-viem": "^3.0.0",
+    "ethers": "^6.13.4",
+    "hardhat": "^2.22.13"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "hardhat-tracer": "^3.1.0"
+  }
+}
