@@ -1,0 +1,38 @@
+{
+  "id": "solc-0_8_27-1b184d32a1608b1ea7e1badd10cceac5",
+  "_format": "hh3-sol-build-info-1",
+  "solcVersion": "0.8.27",
+  "solcLongVersion": "0.8.27+commit.40a35a09",
+  "input": {
+    "language": "Solidity",
+    "sources": {
+      "contracts/MultiBalance.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.27;\n\n/// Query multiple balances efficiently\ncontract MultiBalance {\n    /**\n     * @dev Retrieves a list of ERC20 token balances for owner-token pairs\n     * @param payload Encoded list of owners and ERC20. Each entry is encoded as ownerAddress|contractAddress\n     * @return balances Array of token balances corresponding to the payload\n     */\n    function getBalances(bytes memory payload) public view returns (uint256[] memory) {\n        require(payload.length % 40 == 0, \"Invalid payload length\");\n        uint256 numPairs = payload.length / 40;\n        uint256[] memory balances = new uint256[](numPairs);\n\n        for (uint256 i = 0; i < numPairs; i++) {\n            address ownerAddress;\n            address tokenAddress;\n            \n            assembly {\n                // payload is used as memory pointer of the calldata here\n                // since calldata is a bytes array, the first word (32 bytes) is the size of array\n                // we add 20 bytes to memory pointer so that the first mload gives us 12 unused bytes + 20 bytes of the address\n                let entryStart := add(add(payload, 20), mul(i, 40))\n                // we only want the last 20 bytes for the address\n                ownerAddress := and(mload(entryStart), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)\n                // same as ownerAddress except we add another 20 bytes to offset ownerAddress\n                tokenAddress := and(mload(add(entryStart, 20)), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)\n            }\n            \n            // Use staticcall to get the ERC20 balance\n            (bool success, bytes memory data) = tokenAddress.staticcall(\n                abi.encodeWithSignature(\"balanceOf(address)\", ownerAddress)\n            );\n\n            // If the call was successful and returned data, decode it. Otherwise, use 0.\n            if (success && data.length >= 32) {\n                balances[i] = abi.decode(data, (uint256));\n            } else {\n                balances[i] = 0;\n            }\n        }\n\n        return balances;\n    }\n}\n"
+      }
+    },
+    "settings": {
+      "evmVersion": "paris",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ],
+          "": [
+            "ast"
+          ]
+        }
+      }
+    }
+  },
+  "userSourceNameMap": {
+    "contracts/MultiBalance.sol": "contracts/MultiBalance.sol"
+  }
+}

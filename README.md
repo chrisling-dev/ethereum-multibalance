@@ -42,3 +42,28 @@ The MultiBalance contract is deployed on the following networks:
 ## Usage
 
 See test file to understand how `encodeOwnersAndTokens` function encodes a long list of owner and token address into calldata.
+
+# V2
+
+## Network Support
+
+The MultiBalanceV2 contract is deployed on the following networks:
+
+| Chain     | Chain ID | Address                                    |
+| --------- | -------- | ------------------------------------------ |
+| Mainnet   | 1        | 0x3496Fc018b2d42d8bB7Beed515c6769496148468 |
+| Optimism  | 10       | 0x3496Fc018b2d42d8bB7Beed515c6769496148468 |
+| BSC       | 56       | 0x3496Fc018b2d42d8bB7Beed515c6769496148468 |
+| Unichain  | 130      | 0x158e9b24A65F736593dF273757846716A363E0F0 |
+| Matic     | 137      | 0x3496Fc018b2d42d8bB7Beed515c6769496148468 |
+| Monad     | 143      | 0x158e9b24A65F736593dF273757846716A363E0F0 |
+| zkSync    | 324      | 0x158e9b24A65F736593dF273757846716A363E0F0 |
+| HyperEVM  | 999      | 0x158e9b24A65F736593dF273757846716A363E0F0 |
+| Mantle    | 5000     | 0x158e9b24A65F736593dF273757846716A363E0F0 |
+| Base      | 8453     | 0x3496Fc018b2d42d8bB7Beed515c6769496148468 |
+| Plasma    | 9745     | 0x158e9b24A65F736593dF273757846716A363E0F0 |
+| Arbitrum  | 42161    | 0xb54a518ccD018ADde9B527a6e9e5aADb7b3b0814 |
+| Avalanche | 43114    | 0x3496Fc018b2d42d8bB7Beed515c6769496148468 |
+| Linea     | 59114    | 0x158e9b24A65F736593dF273757846716A363E0F0 |
+| Avalanche | 80094    | 0x158e9b24A65F736593dF273757846716A363E0F0 |
+| Blast     | 81457    | 0x3496Fc018b2d42d8bB7Beed515c6769496148468 |

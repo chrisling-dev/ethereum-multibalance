@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_27-c31ba3af4505e953920a91cfc56fb2f15273bf50",
+  "solcVersion": "0.8.27",
+  "solcLongVersion": "0.8.27+commit.40a35a09",
+  "userSourceNameMap": {
+    "contracts/MultiBalanceV2.sol": "project/contracts/MultiBalanceV2.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/MultiBalanceV2.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.27;\n\n/// Query multiple balances efficiently\ncontract MultiBalanceV2 {\n    /**\n     * @dev Retrieves a list of ERC20 token balances for owner-token pairs\n     * @param payload Encoded list of owners and ERC20. Each entry is encoded as ownerAddress|contractAddress\n     * @return balances Array of token balances corresponding to the payload\n     */\n    function getBalances(bytes memory payload) public view returns (uint256[] memory) {\n        require(payload.length % 40 == 0, \"Invalid payload length\");\n        uint256 numPairs = payload.length / 40;\n        uint256[] memory balances = new uint256[](numPairs);\n\n        for (uint256 i = 0; i < numPairs; i++) {\n            address ownerAddress;\n            address tokenAddress;\n            \n            assembly {\n                // payload is used as memory pointer of the calldata here\n                // since calldata is a bytes array, the first word (32 bytes) is the size of array\n                // we add 20 bytes to memory pointer so that the first mload gives us 12 unused bytes + 20 bytes of the address\n                let entryStart := add(add(payload, 20), mul(i, 40))\n                // we only want the last 20 bytes for the address\n                ownerAddress := and(mload(entryStart), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)\n                // same as ownerAddress except we add another 20 bytes to offset ownerAddress\n                tokenAddress := and(mload(add(entryStart, 20)), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)\n            }\n            \n            // Use staticcall to get the ERC20 balance\n            (bool success, bytes memory data) = tokenAddress.staticcall(\n                abi.encodeWithSignature(\"balanceOf(address)\", ownerAddress)\n            );\n\n            // If the call was successful and returned data, decode it. Otherwise, use 0.\n            if (success && data.length >= 32) {\n                balances[i] = abi.decode(data, (uint256));\n            } else {\n                balances[i] = 0;\n            }\n        }\n\n        return balances;\n    }\n\n    /**\n     * @dev Retrieves a list of ERC20 token balances for a given owner\n     * @param payload First 20 bytes should be owner address, every next 20 bytes should be contract address of an ERC20 token\n     * @return balances Array of token balances corresponding to the payload\n     */\n    function getBalancesForOwner(bytes memory payload) public view returns (uint256[] memory) {\n        // payload should be at least 40 bytes (20 bytes for owner address + 20 bytes for first token address)\n        require(payload.length % 20 == 0 && payload.length >= 40, \"Invalid payload length\");\n        uint256 numTokens = (payload.length - 20) / 20;\n        uint256[] memory balances = new uint256[](numTokens);\n        \n        // extract owner address from the first 20 bytes of the payload\n        address ownerAddress;\n        assembly {\n            // `payload` points to the length word; actual data starts at `payload + 32`\n            // owner is the first 20 bytes of data; it occupies the high-order 20 bytes of the first word\n            // by adding 20 bytes to payload, we get 12 unused bytes + 20 bytes of the address and we mask the rest to get the address\n            ownerAddress := and(mload(add(payload, 20)), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)\n        }\n\n        // iterate over each token address and get the balance\n        for (uint256 i = 0; i < numTokens; i++) {\n            address tokenAddress;\n            assembly {\n                // token i is at offset 20 + i * 20 from the start of data\n                let dataStart := add(payload, 20)\n                let tokenPtr := add(dataStart, add(20, mul(i, 20)))\n                // we only want the last 20 bytes for the address\n                tokenAddress := and(mload(tokenPtr), 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)\n            }\n\n            // Use staticcall to get the ERC20 balance\n            (bool success, bytes memory data) = tokenAddress.staticcall(\n                abi.encodeWithSignature(\"balanceOf(address)\", ownerAddress)\n            );\n\n            // If the call was successful and returned data, decode it. Otherwise, use 0.\n            if (success && data.length >= 32) {\n                balances[i] = abi.decode(data, (uint256));\n            } else {\n                balances[i] = 0;\n            }\n        }\n\n        return balances;\n    }\n}\n"
+      }
+    }
+  }
+}
